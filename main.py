@@ -9,6 +9,9 @@ import zipfile
 import os
 import sys
 
+import networkx
+import matplotlib.pyplot as plt
+
 import download
 from taxid import Taxa
 from tree import Node
@@ -75,31 +78,14 @@ def buildTree(nodes):
     Returns:
         Head node of a tree
     '''
-    
-    # Plan: create our head node from the first entry: Taxid with id 1
-    head = Node(nodes[0])
-    nodes.pop(0)
+    G = networkx.DiGraph()
 
-    print(len(nodes))
+    for node in nodes:
+        n1 = int(node.taxid)
+        n2 = int(node.parent)
+        G.add_edge(n1, n2)
 
-    print("sorting...")
-    # Sort the node list, ordered by parent taxid
-    nodes = sorted(nodes, key=lambda x: int(x.parent))
-    print("sorted.")
-
-    while nodes:
-        # Attempt to insert
-        if head.insert(nodes[0], int(nodes[0].parent)):
-            print(nodes[0].parent, '->', nodes[0].taxid)
-            nodes.pop(0)
-
-        # Upon failure (parent node not in tree yet), move it to the back of
-        # the queue, and continue
-        else:
-            nodes.append(nodes[0])
-            nodes.pop(0)
-
-    return head
+    return G
 
 
 if __name__ == '__main__':
@@ -126,6 +112,10 @@ if __name__ == '__main__':
     nodes = readNodeData(path + '/nodes.dmp')
     print(" Done")
 
-    print("Building Taxonomy Tree...")
-    head = buildTree(nodes)
+    print("Building Taxonomy Tree...", end='')
+    G = buildTree(nodes)
     print("Done")
+
+    print("Generating plot...")
+    networkx.draw_networkx(G)
+    plt.show()
