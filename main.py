@@ -156,12 +156,17 @@ if __name__ == '__main__':
     print("Building Taxonomy Tree...", end='')
     sys.stdout.flush()
     G = buildTree(nodes, names)
-    print("Done")
+    print(" Done")
 
     print("Generating example plot...")
-    path_to_node = list(networkx.shortest_path(G, source=names[1], target=names[1573476]))
-    path_to_node.extend(list(networkx.shortest_path(G, source=names[1], target=names[10117])))
-    path_to_node.extend(list(networkx.shortest_path(G, source=names[1], target=names[6844])))
-    subgraph = G.subgraph(nodes=path_to_node)
+    nodes = []
+    for taxa in sys.argv[1:]:
+        try:
+            nodes.extend(list(networkx.shortest_path(G, source=names[1], target=names[int(taxa)])))
+
+        except:
+            print('Error: Taxa ID not found (' + taxa + ')')
+
+    subgraph = G.subgraph(nodes=nodes)
     networkx.draw_networkx(subgraph, pos=networkx.drawing.nx_agraph.graphviz_layout(subgraph))
     plt.show()
