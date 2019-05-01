@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 import download
 from taxid import Taxa
-from tree import Node
+import tree
 
 
 urls = ['ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdmp.zip']
@@ -36,6 +36,7 @@ def prepareData(url, path):
     zip_f.extractall(path)
     zip_f.close()
 
+
 def readTaxaData(path):
     '''
     Desc: Read the names list data from taxdump's 'names.dmp' file
@@ -54,7 +55,7 @@ def readTaxaData(path):
         row = row.split('|')
         row = [i.strip() for i in row]
 
-        if len(row) > 1:
+        if not len(row) > 1:
             break
 
         names[int(row[0])] = row[1]
@@ -92,12 +93,13 @@ def readNodeData(path):
     return nodes
 
 
-def buildTree(nodes):
+def buildTree(nodes, names):
     '''
     Desc: Build a Taxonomy tree based on the retrieved Taxa data
 
     Args:
         nodes: list of Taxa objects
+        names: dictionary of taxid to names
 
     Returns:
         Head node of a tree
@@ -105,9 +107,19 @@ def buildTree(nodes):
     G = networkx.DiGraph()
 
     for node in nodes:
-        n1 = int(node.taxid)
-        n2 = int(node.parent)
-        G.add_edge(n1, n2)
+        try:
+            n1 = names[int(node.taxid)]
+
+        except:
+            n1 = int(node.taxid)
+
+        try:
+            n2 = names[int(node.parent)]
+
+        except:
+            n2 = int(node.parent)
+
+        G.add_edge(n2, n1)
 
     return G
 
@@ -136,10 +148,20 @@ if __name__ == '__main__':
     nodes = readNodeData(path + '/nodes.dmp')
     print(" Done")
 
+    print('Reading name list data...', end='')
+    sys.stdout.flush()
+    names = readTaxaData(path + '/names.dmp')
+    print(' Done')
+
     print("Building Taxonomy Tree...", end='')
-    G = buildTree(nodes)
+    sys.stdout.flush()
+    G = buildTree(nodes, names)
     print("Done")
 
-    print("Generating plot...")
-    networkx.draw_networkx(G)
+    print("Generating example plot...")
+    path_to_node = list(networkx.shortest_path(G, source=names[1], target=names[1573476]))
+    path_to_node.extend(list(networkx.shortest_path(G, source=names[1], target=names[10117])))
+    path_to_node.extend(list(networkx.shortest_path(G, source=names[1], target=names[6844])))
+    subgraph = G.subgraph(nodes=path_to_node)
+    networkx.draw_networkx(subgraph, pos=networkx.drawing.nx_agraph.graphviz_layout(subgraph))
     plt.show()
