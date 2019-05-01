@@ -36,6 +36,31 @@ def prepareData(url, path):
     zip_f.extractall(path)
     zip_f.close()
 
+def readTaxaData(path):
+    '''
+    Desc: Read the names list data from taxdump's 'names.dmp' file
+
+    Args:
+        path: path to the 'names.dmp' file
+
+    Returns: Dictionary of a Taxa ID number to the actual name
+    '''
+    names = {}
+
+    with open(path, 'r') as f:
+        data = f.read().split('\n')
+
+    for row in data:
+        row = row.split('|')
+        row = [i.strip() for i in row]
+
+        if len(row) > 1:
+            break
+
+        names[int(row[0])] = row[1]
+
+    return names
+
 
 def readNodeData(path):
     '''
@@ -46,7 +71,6 @@ def readNodeData(path):
 
     Returns: List of Taxa objects
     '''
-    
     nodes = []
 
     with open(path, 'r') as f:
