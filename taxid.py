@@ -7,10 +7,11 @@ Authors:
 
 
 class Taxa:
-    def __init__(self, taxid, rank, parent):
-        self.taxid  = taxid
-        self.rank   = rank
-        self.parent = parent
+    def __init__(self, taxid, rank, parent, gencode_id):
+        self.taxid      = taxid
+        self.rank       = rank
+        self.parent     = parent
+        self.gencode_id = gencode_id
 
     def __hash__(self):
         return int(self.taxid)

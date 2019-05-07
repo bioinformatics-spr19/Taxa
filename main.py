@@ -63,6 +63,32 @@ def readTaxaData(path):
     return names
 
 
+def readGencodeData(path):
+    '''
+    Desc: Read the gencode ID to sequence list in the 'gencode.dmp' file
+
+    Args:
+        path: path to the 'gencode.dmp' file
+
+    Returns: dictionary of the gencode ID number to sequence
+    '''
+    sequences = {}
+
+    with open(path, 'r') as f:
+        data = f.read().split('\n')
+
+    for row in data:
+        row = row.split('|')
+        row = [i.strip() for i in row]
+
+        if not len(row) > 1:
+            break
+
+        sequences[int(row[0])] = row[3]
+
+    return sequences
+
+
 def readNodeData(path):
     '''
     Desc: Read the node list data from the taxdmp's 'nodes.dmp' file 
@@ -87,19 +113,21 @@ def readNodeData(path):
         tax_id   = row[0]
         tax_par  = row[1]
         tax_rank = row[2]
+        gencode  = row[7]
 
-        nodes.append(Taxa(tax_id, tax_rank, tax_par))
+        nodes.append(Taxa(tax_id, tax_rank, tax_par, gencode))
 
     return nodes
 
 
-def buildTree(nodes, names):
+def buildTree(nodes, names, sequences):
     '''
     Desc: Build a Taxonomy tree based on the retrieved Taxa data
 
     Args:
         nodes: list of Taxa objects
         names: dictionary of taxid to names
+        sequences: taxonomic sequences from gencode
 
     Returns:
         Head node of a tree
@@ -145,22 +173,31 @@ if __name__ == '__main__':
 
     print("Reading node list data...", end='')
     sys.stdout.flush()
-    nodes = readNodeData(path + '/nodes.dmp')
+    taxa_nodes = readNodeData(path + '/nodes.dmp')
     print(" Done")
 
     print('Reading name list data...', end='')
     sys.stdout.flush()
     names = readTaxaData(path + '/names.dmp')
     print(' Done')
-
-    print("Building Taxonomy Tree...", end='')
+    
+    print('Reading gencode list data...', end='')
     sys.stdout.flush()
-    G = buildTree(nodes, names)
-    print(" Done")
+    sequences = readGencodeData(path + '/gencode.dmp')
+    print(' Done')
 
-    print("Generating example plot...")
+    print('Building Taxonomy Tree...', end='')
+    sys.stdout.flush()
+    G = buildTree(taxa_nodes, names, sequences)
+    print(' Done')
+
+    print('Generating example plot...')
     nodes = []
     for taxa in sys.argv[1:]:
+        for i in taxa_nodes:
+            if int(i.taxid) == int(taxa):
+                print('Found GenCode Sequence for node ' + str(names[int(taxa)]) + ': ' + sequences[int(i.gencode_id)])
+
         try:
             nodes.extend(list(networkx.shortest_path(G, source=names[1], target=names[int(taxa)])))
 
