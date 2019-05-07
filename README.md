@@ -15,3 +15,8 @@ Modern molecular techniques are allowing us to better define a taxa groups. With
 ## Installation
 install project using the following github link https://github.com/bioinformatics-spr19/Taxa
 install Networkx follow the give link for more information on how to install https://networkx.github.io/documentation/latest/install.html
+
+## Running
+```
+python main.py <species taxid from nodes.dmp> ...
+```
